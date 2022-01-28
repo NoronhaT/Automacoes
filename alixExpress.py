@@ -181,8 +181,3 @@ root.mainloop()
 
 # VIDEO REFERENCIA https://www.youtube.com/watch?v=H-XpwSz4x8Y
 
-
-
-
-
-# VIDEO REFERENCIA https://www.youtube.com/watch?v=H-XpwSz4x8Y
