@@ -1,0 +1,36 @@
+from binance import Client, ThreadedWebsocketManager, ThreadedDepthCacheManager
+from keys import *
+import investpy
+
+client = Client(api_key, api_secret)
+
+
+# place a test market buy order, to place an actual order use the create_order function
+
+# get all symbol prices
+
+y_wallet =input('INSIRA A SIGLA DA CRIPTO QUE VOCÊ POSSUI EM CARTEIRA: ')
+
+
+#FIRST CRIPTO
+
+balance = client.get_asset_balance(asset=y_wallet) # the asset must be linked to a variable
+cripto_one = list(balance.items())
+
+#DICT TO LIST (cripto name)
+cripto_one_name = cripto_one[0]
+cripto_one_qt = cripto_one[1]
+cripto_one_r = cripto_one[2]
+
+#LIST TO TUPLE (cripto name)
+cripto_one_value = cripto_one_name[1]
+cripto_one_q = cripto_one_qt[1]
+cripto_one_rt = cripto_one_r[1]
+
+cripto_wallet = float(cripto_one_q) + float(cripto_one_rt)
+
+
+print("Criptomoeda em carteira: " + cripto_one_value)
+print("Quantidade em carteira: " + cripto_one_q)
+print("Quantidade em reserva: " + cripto_one_rt)
+print("Total de " + cripto_one_value + ": " + str(cripto_wallet))
