@@ -1,0 +1,142 @@
+import time
+from pywinauto import Application
+import pyautogui as py
+import pandas as pd
+
+# ----------------------------------------------------------#
+# SE CONECTA AO SISTEMA
+
+print("SE CONECTANDO AO SISTEMA ")
+app = Application(backend='uia').start("L:\MaxGPS\MaxGPS.exe")
+time.sleep(15)
+py.typewrite("T***")
+time.sleep(3)
+py.typewrite(['tab'])
+time.sleep(3)
+py.typewrite('****')
+py.typewrite(['enter'])
+time.sleep(10)
+# app = Application(backend='uia').connect(handle=0x14062C)
+out_app = app['maxtek - 2021 - ***'].draw_outline()
+out_app = app['maxtek - 2021 - ***']
+out_app.maximize()
+time.sleep(5)
+
+print("Buscando dados de apontamento")
+# FAZ O CAMINHO ATÉ A PRODUÇÃO
+menu_app = out_app.child_window(title='MenuEsquerdo')
+menu_app.draw_outline()
+time.sleep(2)
+mod_app = menu_app.child_window(title='Módulos')
+time.sleep(2)
+mod_app.draw_outline()
+time.sleep(2)
+prod_app = mod_app.child_window(title='Produção')
+time.sleep(2)
+prod_app.draw_outline()
+time.sleep(2)
+prod_app.invoke()
+time.sleep(2)
+
+print("Acessando o relatório")
+# ACESSO A BARRA DE COMANDO DE APONTAMENTOS
+out_app = app['maxtek - 2021 - ****']
+pcp_app = out_app.child_window(title='PCP', control_type="TabItem")
+pcp_app.draw_outline()
+pcp_app.click_input()
+out_app = app['maxtek - 2021 - RHOWERT']
+rib_app = out_app.child_window(title="The Ribbon")
+rib_app.draw_outline()
+lri_app = rib_app.child_window(title="Lower Ribbon")
+lri_app.draw_outline()
+pcc_app = lri_app.child_window(title="Apontamentos Abertos")
+pcc_app.draw_outline()
+pcc_app.click_input()
+time.sleep(2)
+
+# EXTRAIR PARA EXCEL
+
+print("Extraindo para Excel")
+time.sleep(5)
+out_app = app['maxtek - 2021 - ***']
+rib_app = out_app.child_window(title="The Ribbon")
+rib_app.draw_outline()
+qui_app = rib_app.child_window(title="Quick Access Toolbar")
+imp_app = qui_app.child_window(title="Imprimir")
+imp_app.draw_outline()
+imp_app.click_input()
+time.sleep(2)
+py.press("down")
+time.sleep(2)
+py.typewrite(['enter'])
+time.sleep(2)
+
+# SALVAR COMO
+
+print("Salvando arquivo de Excel")
+time.sleep(5)
+py.click(265, 272)
+py.typewrite('C:\\Users\\Micro\\PycharmProjects\\ordemfab\\apont em andamento.xlsx')
+time.sleep(3)
+py.typewrite(['enter'])
+time.sleep(3)
+py.typewrite(['left'])
+time.sleep(3)
+py.typewrite(['enter'])
+time.sleep(5)
+
+# TRATAR ARQUIVO NO PANDAS
+print("Modificando arquivo no Excel")
+tab = pd.read_excel("C:\\Users\\Micro\\PycharmProjects\\ordemfab\\apont em andamento.xlsx")
+new_tab = tab.fillna(0)
+df_tab = new_tab[0:-1]
+df_tab["%PRODUÇÃO"] = df_tab["Qde Feita"] / df_tab["Qde Lançada"]
+df_tab.replace("NaN", 0)
+df_tab.to_excel(r'C:\\Users\\Micro\\PycharmProjects\\ordemfab\\rel_diario.xlsx', index=False)
+time.sleep(5)
+
+# PREPARA ARQUIVO NO EXCEL
+print("Executando Excel")
+app = Application(backend='uia').start("C:\Program Files (x86)\Microsoft Office\Office14\EXCEL")
+time.sleep(3)
+py.hotkey('Ctrl', 'a')
+time.sleep(3)
+py.typewrite("C:\\Users\\Micro\\PycharmProjects\\ordemfab\\rel_diario.xlsx")
+time.sleep(3)
+py.typewrite(['enter'])
+time.sleep(5)
+py.hotkey('Ctrl', 't')
+time.sleep(3)
+py.hotkey('Alt', 'c')
+time.sleep(3)
+py.typewrite("o")
+time.sleep(3)
+py.typewrite("c")
+time.sleep(3)
+py.typewrite("20")
+time.sleep(3)
+py.typewrite(['enter'])
+py.hotkey('Ctrl', 'c')
+time.sleep(3)
+
+# ABRE O NAVEGADOR
+print("Enviando Arquivo para a nuvem")
+app = Application(backend='uia').start("C:\Program Files\Google\Chrome\Application\chrome.exe")
+time.sleep(3)
+py.typewrite("https://docs.google.com/spreadsheets/d/1Zmit2PMn7mSknuzIgcClxDAtX3L1mBjfd2YrNFlTXjQ/edit#gid=******")
+time.sleep(3)
+py.typewrite(["enter"])
+time.sleep(3)
+py.hotkey('Ctrl', 'a')
+time.sleep(3)
+py.typewrite(["delete"])
+time.sleep(3)
+py.hotkey('Ctrl', 'v')
+time.sleep(3)
+
+# NOVA GUIA PARA O DATASTUDIO
+print("Abrindo página do relatório")
+py.hotkey('Ctrl', 't')
+time.sleep(3)
+py.typewrite("https://datastudio.google.com/reporting/dad2a17b-fe51-496a-ae2d-213f40f663af/page/p_*****")
+py.typewrite(["enter"])
