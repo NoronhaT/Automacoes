@@ -1,0 +1,123 @@
+import time
+from selenium import webdriver
+import datetime
+from selenium.webdriver.common.action_chains import ActionChains
+from selenium.webdriver.common.keys import Keys
+from password import cnpj
+from password import senha
+from password import cnpj_cliente
+from password import local_cliente
+from password import valor_round
+
+now = datetime.date.today()
+data = now.strftime("%m") + ("/") + now.strftime("%Y")
+chrome_driver = "chromedriver.exe"
+driver = webdriver.Chrome(chrome_driver)
+
+
+
+
+
+time.sleep(3)
+
+print("...CARREGANDO...")
+
+time.sleep(3)
+
+print("...CARREGANDO...")
+
+time.sleep(3)
+
+driver.get("http://guarulhos.ginfes.com.br/")
+
+print("POR FAVOR AGUARDE")
+
+driver.maximize_window()
+
+time.sleep(50)
+
+print("Interagindo com a página...>>>")
+
+time.sleep(5)
+icon_gif = driver.find_element_by_xpath("//*[@id='principal']/table/tbody/tr[2]/td/table/tbody/tr/td/table/tbody/tr/td[1]/table/tbody/tr[1]/td/table/tbody/tr/td[1]/table/tbody/tr[1]/td/table/tbody/tr/td[1]/img").click()
+time.sleep(5)
+
+print("O CNPJ executado é: " + cnpj)
+chave_cnpj = driver.find_element_by_name("ext-gen29")
+chave_cnpj.send_keys(cnpj)
+chave_cnpj.send_keys(Keys.RETURN)
+
+time.sleep(5)
+
+senha_acesso = driver.find_element_by_name("ext-gen33")
+senha_acesso.send_keys(senha)
+senha_acesso.send_keys(Keys.RETURN)
+
+print("Ao clicar em sim, você entrará no campo de emissão de notas! Deseja prosseguir?")
+
+time.sleep(5)
+
+print("Acessando o campo seguro!")
+
+botao_entrar= driver.find_element_by_id("ext-gen51").click()
+
+time.sleep(5)
+print("Elaborando a sua nota, por favor aguarde!")
+
+time.sleep(5)
+
+ActionChains(driver).send_keys(Keys.TAB * 1).perform()
+
+time.sleep(2)
+
+ActionChains(driver).send_keys(Keys.ENTER * 1).perform()
+
+
+cliente_cnpj = driver.find_element_by_xpath("//*[@id='principal']/table/tbody/tr[2]/td/table/tbody/tr[2]/td/table/tbody/tr/td[2]/table/tbody/tr/td/table/tbody/tr/td/div/div[2]/div/div/div/div/table[1]/tbody/tr/td/div/div/div/form/fieldset/div/div/fieldset[1]/div/div/table/tbody/tr[2]/td/div/div/div/div/div[1]/div/div/div/div[1]/input")
+cliente_cnpj.send_keys(cnpj_cliente)
+cliente_cnpj.send_keys(Keys.RETURN)
+
+time.sleep(2)
+
+ActionChains(driver).send_keys(Keys.TAB * 1).perform()
+
+time.sleep(2)
+
+ActionChains(driver).send_keys(Keys.ENTER * 1).perform()
+
+time.sleep(1)
+
+next_step = driver.find_element_by_xpath("//*[@id='principal']/table/tbody/tr[2]/td/table/tbody/tr[2]/td/table/tbody/tr/td[2]/table/tbody/tr/td/table/tbody/tr/td/div/div[2]/div/div/div/div/table[2]/tbody/tr/td/table/tbody/tr/td[2]/em/button").click()
+
+time.sleep(1)
+
+cidade_servico = driver.find_element_by_xpath("//*[@id='principal']/table/tbody/tr[2]/td/table/tbody/tr[2]/td/table/tbody/tr/td[2]/table/tbody/tr/td/table/tbody/tr/td/div/div[2]/div/div[2]/div/div/div/div/div/form/fieldset[2]/div/div/div/div/div/div/div[2]/div/div/div/div[1]/div/input").clear()
+cidade_servico = driver.find_element_by_xpath("//*[@id='principal']/table/tbody/tr[2]/td/table/tbody/tr[2]/td/table/tbody/tr/td[2]/table/tbody/tr/td/table/tbody/tr/td/div/div[2]/div/div[2]/div/div/div/div/div/form/fieldset[2]/div/div/div/div/div/div/div[2]/div/div/div/div[1]/div/input").send_keys(local_cliente)
+
+time.sleep(1)
+ActionChains(driver).send_keys(Keys.TAB * 1).perform()
+time.sleep(1)
+ActionChains(driver).send_keys(Keys.ARROW_DOWN * 1).perform()
+time.sleep(1)
+ActionChains(driver).send_keys(Keys.TAB * 1).perform()
+time.sleep(1)
+
+campo_obs = driver.find_element_by_xpath("//*[@id='principal']/table/tbody/tr[2]/td/table/tbody/tr[2]/td/table/tbody/tr/td[2]/table/tbody/tr/td/table/tbody/tr/td/div/div[2]/div/div[2]/div/div/div/div/div/form/fieldset[3]/div/div/div[2]/div/div/div/div[1]/div/div/div/div[1]/textarea")
+campo_obs.clear()
+campo_obs.send_keys("Serviços prestados no mês: " + data)
+
+valor_servico = driver.find_element_by_xpath("//*[@id='principal']/table/tbody/tr[2]/td/table/tbody/tr[2]/td/table/tbody/tr/td[2]/table/tbody/tr/td/table/tbody/tr/td/div/div[2]/div/div[2]/div/div/div/div/div/form/fieldset[5]/div/div/div[1]/div/div/div/div[1]/div/div/div/div[1]/input")
+valor_servico.send_keys(str(valor_round))
+time.sleep(5)
+ActionChains(driver).send_keys(Keys.TAB * 1).perform()
+time.sleep(5)
+ActionChains(driver).send_keys(Keys.ENTER * 1).perform()
+
+proximo_passo = driver.find_element_by_xpath("//*[@id='principal']/table/tbody/tr[2]/td/table/tbody/tr[2]/td/table/tbody/tr/td[2]/table/tbody/tr/td/table/tbody/tr/td/div/div[2]/div/div[2]/div/div/div/div/div/form/table/tbody/tr/td[2]/table/tbody/tr/td/table/tbody/tr/td[2]/em/button").click()
+time.sleep(5)
+
+
+print("ATENÇÃO! CONFIRA OS DADOS PARA A EMISSÃO, APÓS ESTA ETAPA NÃO SERÁ POSSÍVEL EXECUTAR NENHUMA ALTERAÇÃO!")
+
+dados_empresa = driver.find_element_by_xpath("//*[@id='principal']/table/tbody/tr[2]/td/table/tbody/tr[2]/td/table/tbody/tr/td[2]/table/tbody/tr/td/table/tbody/tr/td/div/div[2]/div/div[3]/div/div/div/div/div/form/fieldset[1]/div/div/div[1]/div/div/div/div[1]/div/div/div/div[1]/input")
+
