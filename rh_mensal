@@ -1,0 +1,71 @@
+import pandas as pd
+import datetime
+import os
+
+now =datetime.date.today()
+dia =now.strftime("%m") + now.strftime("%Y")
+
+# COLAB
+df_tab = pd.read_excel("rh_mensal.xls")
+index = df_tab.index
+nb_row = len(index)
+new_ind = nb_row-43 # atenção ao dias do mes 46 para mes com 31, 45 para meses com 30 dias
+contador =0
+
+while nb_row != 54: #sempre checar a distancia entre os blocos de colaboradores
+    index = df_tab.index
+    nb_row = len(index)-contador
+    colaborador = df_tab.iat[7+contador, 1] #nome do colaborador
+    funcao = df_tab.iat[9+contador, 1]
+    print(colaborador)
+    headers = df_tab.iloc[13+contador]
+
+    new_df = pd.DataFrame(df_tab.values[15+contador:], columns=headers)
+    print(new_df.head())
+    df_new = new_df[:-new_ind+contador]
+    contador+= 55 #distancia entre os elementos necessarios para criação da tabela (O SEGREDO É ESSE CARA AQUI)
+    df_new["COLABORADOR"] = colaborador
+    df_new["FUNÇÃO"] = funcao
+    df = df_new.replace('Folga', ' ')
+    df_new = df.replace(['NaN'], ' ')
+    df_new.to_excel(r'C:\Users\Micro\PycharmProjects\rh_mensal\colaborador{0}.xlsx'.format(colaborador + "10-21"),
+                    index=False)
+    data_final = pd.DataFrame()
+    for files in os.listdir("C:\\Users\\Micro\\PycharmProjects\\rh_mensal"):
+        if files.endswith('10-21.xlsx'):
+            data = pd.read_excel(files, index_col=None)
+            data_final = data_final.append(data)
+            data_remv = data_final.replace('COVID 1', ' ')
+            data_abo = data_remv.replace('Abonado', ' ')
+            data_atr = data_abo.replace('Atraso', ' ')
+            data_ext = data_atr.replace('ServExt', ' ')
+            data_esq = data_ext.replace('Esquec.', ' ')
+            data_mtu = data_esq.replace('Mud Tur', ' ')
+            data_sai = data_mtu.replace('Saí AJ', ' ')
+            data_acm = data_sai.replace('AcComp', ' ')
+            data_hex = data_acm.replace('H.Extra', ' ')
+            data_fer = data_hex.replace('Feriado', ' ')
+            data_fes = data_fer.replace('Férias', ' ')
+            data_grv = data_fes.replace('Greve', ' ')
+            data_faj = data_grv.replace('Falta J', ' ')
+            fata_com = data_faj.replace('Compens', ' ')
+            data_dia = fata_com.replace('At.Dia', ' ')
+            fata_inj = data_dia.replace('FaltaIn', ' ')
+            ant_fer = fata_inj.replace('Ant Fer', ' ')
+            atn_jus = ant_fer.replace('At.Just', ' ')
+            bh_hor = atn_jus.replace('B.Horas', ' ')
+            part_sai = bh_hor.replace('Particu', ' ')
+            ast_rev = part_sai.replace('\*', '', regex=True)
+            atr_jus = ast_rev.replace('AtrasoJ', ' ')
+            atr_aco = atr_jus.replace('At.Acom', ' ')
+            atr_aco.to_excel(r'C:\Users\Micro\PycharmProjects\rh_mensal\relatorio{0}.xlsx'.format("10-21"),
+                             index=False)
+
+    data_final_dois = pd.DataFrame()
+    for files in os.listdir("C:\\Users\\Micro\\PycharmProjects\\rh_mensal"):
+        if files.startswith('relat'):
+            dataf = pd.read_excel(files, index_col=None)
+            data_final_dois = data_final_dois.append(dataf)
+            data_remv_dois = data_final_dois.replace('Av.Prev', ' ')
+            data_remv_dois.to_excel(r'C:\Users\Micro\PycharmProjects\rh_mensal\resumo{0}.xlsx'.format("-Unificado"),
+                                    index=False)
