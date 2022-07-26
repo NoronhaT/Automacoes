@@ -1,142 +1,111 @@
-import time
-from pywinauto import Application
-import pyautogui as py
+import jaydebeapi
 import pandas as pd
+import numpy as np
+from datetime import datetime
 
-# ----------------------------------------------------------#
-# SE CONECTA AO SISTEMA
+conn = jaydebeapi.connect("com.pervasive.jdbc.v2.Driver", "jdbc:pervasive://rhwt002s:1583/RHOWERTGPS",
+                          {"user": "usuario", "password": "usuario"}, "pervasive_jdbc.jar")
+curs = conn.cursor()
+curs.execute(
+    "select code_ressource_op, piece_op,Num_Bon, Num_Affaire,of_op, num_op, qt_term_op, Date_Debut, Operateur, Date_Debut,Sec_cent_Debut, H_min_Debut, Id_Multi_Bon, code_ressource_op, temps_usinage, temps_reglage from of_phase2 A inner join sca B on A.Num_Bon = B.Bon")
 
-print("SE CONECTANDO AO SISTEMA ")
-app = Application(backend='uia').start("L:\MaxGPS\MaxGPS.exe")
-time.sleep(15)
-py.typewrite("T***")
-time.sleep(3)
-py.typewrite(['tab'])
-time.sleep(3)
-py.typewrite('****')
-py.typewrite(['enter'])
-time.sleep(10)
-# app = Application(backend='uia').connect(handle=0x14062C)
-out_app = app['maxtek - 2021 - ***'].draw_outline()
-out_app = app['maxtek - 2021 - ***']
-out_app.maximize()
-time.sleep(5)
 
-print("Buscando dados de apontamento")
-# FAZ O CAMINHO ATÉ A PRODUÇÃO
-menu_app = out_app.child_window(title='MenuEsquerdo')
-menu_app.draw_outline()
-time.sleep(2)
-mod_app = menu_app.child_window(title='Módulos')
-time.sleep(2)
-mod_app.draw_outline()
-time.sleep(2)
-prod_app = mod_app.child_window(title='Produção')
-time.sleep(2)
-prod_app.draw_outline()
-time.sleep(2)
-prod_app.invoke()
-time.sleep(2)
+# DADOS DE ORDEM DE FABRICAÇÃO
 
-print("Acessando o relatório")
-# ACESSO A BARRA DE COMANDO DE APONTAMENTOS
-out_app = app['maxtek - 2021 - ****']
-pcp_app = out_app.child_window(title='PCP', control_type="TabItem")
-pcp_app.draw_outline()
-pcp_app.click_input()
-out_app = app['maxtek - 2021 - RHOWERT']
-rib_app = out_app.child_window(title="The Ribbon")
-rib_app.draw_outline()
-lri_app = rib_app.child_window(title="Lower Ribbon")
-lri_app.draw_outline()
-pcc_app = lri_app.child_window(title="Apontamentos Abertos")
-pcc_app.draw_outline()
-pcc_app.click_input()
-time.sleep(2)
+df = pd.DataFrame(curs.fetchall(),
+                  columns=['recurso_op','produto_op','numero_Ficha', 'numero_Pedido', 'item_op', 'numero_operacao', 'quantidade_terminada',
+                           'data_início', 'operador', 'Data', 'Segundos_hm', 'Hora_minuto', 'Multificha', 'Recurso', 'peca_por_hora', 'tempo_setup'])
 
-# EXTRAIR PARA EXCEL
+df.Hora_minuto = pd.to_numeric(df.Hora_minuto, errors='coerce').fillna(0).astype(np.int64)
+df.Segundos_hm = pd.to_numeric(df.Segundos_hm, errors='coerce').fillna(0).astype(np.int64)
+df.quantidade_terminada = pd.to_numeric(df.quantidade_terminada, errors='coerce').fillna(0).astype(np.int64)
 
-print("Extraindo para Excel")
-time.sleep(5)
-out_app = app['maxtek - 2021 - ***']
-rib_app = out_app.child_window(title="The Ribbon")
-rib_app.draw_outline()
-qui_app = rib_app.child_window(title="Quick Access Toolbar")
-imp_app = qui_app.child_window(title="Imprimir")
-imp_app.draw_outline()
-imp_app.click_input()
-time.sleep(2)
-py.press("down")
-time.sleep(2)
-py.typewrite(['enter'])
-time.sleep(2)
+# Definindo horas_minutos
+new_df = df.assign(Hora_Conv = lambda x: x.Hora_minuto /256)
+new_df_dois = new_df.assign(Minutos_Conv = lambda  x: x.Hora_Conv )
+new_df_dois.Hora_Conv = new_df_dois['Hora_Conv'].astype(int)
+new_df_tres = new_df_dois.assign(Minutos_Dec = lambda  x: (x.Minutos_Conv - x.Hora_Conv) * 256)
+new_df_tres.Minutos_Dec = new_df_tres['Minutos_Dec'].astype(int)
 
-# SALVAR COMO
+#Definindo segundos
 
-print("Salvando arquivo de Excel")
-time.sleep(5)
-py.click(265, 272)
-py.typewrite('C:\\Users\\Micro\\PycharmProjects\\ordemfab\\apont em andamento.xlsx')
-time.sleep(3)
-py.typewrite(['enter'])
-time.sleep(3)
-py.typewrite(['left'])
-time.sleep(3)
-py.typewrite(['enter'])
-time.sleep(5)
+df_format = new_df_tres.assign(Segundos_Conv = lambda x: x.Segundos_hm / 16777216)
+df_format.Segundos_Conv = df_format['Segundos_Conv'].astype(int)
+df_format.Hora_Conv = df_format.Hora_Conv.astype(str)
+df_format.Minutos_Dec = df_format.Minutos_Dec.astype(str)
+df_format.Segundos_Conv = df_format.Segundos_Conv.astype(str)
 
-# TRATAR ARQUIVO NO PANDAS
-print("Modificando arquivo no Excel")
-tab = pd.read_excel("C:\\Users\\Micro\\PycharmProjects\\ordemfab\\apont em andamento.xlsx")
-new_tab = tab.fillna(0)
-df_tab = new_tab[0:-1]
-df_tab["%PRODUÇÃO"] = df_tab["Qde Feita"] / df_tab["Qde Lançada"]
-df_tab.replace("NaN", 0)
-df_tab.to_excel(r'C:\\Users\\Micro\\PycharmProjects\\ordemfab\\rel_diario.xlsx', index=False)
-time.sleep(5)
+#Criando coluna de tempo calculado:
 
-# PREPARA ARQUIVO NO EXCEL
-print("Executando Excel")
-app = Application(backend='uia').start("C:\Program Files (x86)\Microsoft Office\Office14\EXCEL")
-time.sleep(3)
-py.hotkey('Ctrl', 'a')
-time.sleep(3)
-py.typewrite("C:\\Users\\Micro\\PycharmProjects\\ordemfab\\rel_diario.xlsx")
-time.sleep(3)
-py.typewrite(['enter'])
-time.sleep(5)
-py.hotkey('Ctrl', 't')
-time.sleep(3)
-py.hotkey('Alt', 'c')
-time.sleep(3)
-py.typewrite("o")
-time.sleep(3)
-py.typewrite("c")
-time.sleep(3)
-py.typewrite("20")
-time.sleep(3)
-py.typewrite(['enter'])
-py.hotkey('Ctrl', 'c')
-time.sleep(3)
+df_format = df_format.assign(Hora_Prod = df_format['Data'] + ' ' + df_format.Hora_Conv + ':' + df_format.Minutos_Dec + ':' + df_format.Segundos_Conv)
+df_format['Hora_Prod'] = pd.to_datetime(df_format['Hora_Prod'],format='%Y/%m/%d %H:%M:%S')
+df_format =df_format.drop(columns=['Segundos_Conv','Hora_Conv','Minutos_Dec','Minutos_Conv','Segundos_hm','Hora_minuto'])
 
-# ABRE O NAVEGADOR
-print("Enviando Arquivo para a nuvem")
-app = Application(backend='uia').start("C:\Program Files\Google\Chrome\Application\chrome.exe")
-time.sleep(3)
-py.typewrite("https://docs.google.com/spreadsheets/d/1Zmit2PMn7mSknuzIgcClxDAtX3L1mBjfd2YrNFlTXjQ/edit#gid=******")
-time.sleep(3)
-py.typewrite(["enter"])
-time.sleep(3)
-py.hotkey('Ctrl', 'a')
-time.sleep(3)
-py.typewrite(["delete"])
-time.sleep(3)
-py.hotkey('Ctrl', 'v')
-time.sleep(3)
 
-# NOVA GUIA PARA O DATASTUDIO
-print("Abrindo página do relatório")
-py.hotkey('Ctrl', 't')
-time.sleep(3)
-py.typewrite("https://datastudio.google.com/reporting/dad2a17b-fe51-496a-ae2d-213f40f663af/page/p_*****")
-py.typewrite(["enter"])
+# SEMPRE FECHAR CONEXAO COM O BANCO
+conn.close()
+
+#criação de colunas adicionais para avaliar tempo da produção
+df_format['tempo_agora'] = datetime.now()
+df_format['tempo_corrido'] = df_format['tempo_agora'] - df_format['Hora_Prod']
+
+# converte os resultados da coluna tempo corrido de nanosegundos para minutos
+# valor / 60.000.000.000
+
+df_format = df_format.assign(tempo_minuto = lambda x:(x['tempo_corrido']/60000000000))
+#muda de deltatime64 para str
+df_format['tempo_minuto'] = df_format['tempo_minuto'].astype('timedelta64[ns]').astype(str)
+#remove a formatação de tempo para utilizar os números de resultado
+df_format['tempo_minuto'] = df_format['tempo_minuto'].map(lambda x: x.lstrip('0 days 00:00:00.').rstrip(''))
+#devolve o valor em str para int
+df_format['tempo_minuto'] = df_format['tempo_minuto'].astype(int)
+#divide a quantidade por hora de peças por 60 para encontrar a taxa minuto da peça padrão
+df_format['taxa_minuto_peca'] =df_format['peca_por_hora'].div(60)
+#divide o tempo corrido em minutos pelo tempo minuto da peça, para encontrar a quantidade peças idela ao horário
+df_format['quantidade_ideal'] = df_format['tempo_minuto'].div(df_format['taxa_minuto_peca'])
+df_format.to_excel('producao_aberta.xlsx',index=False)
+
+
+
+
+
+# APONTAMENTOS EM ANDAMENTO
+
+conn_dois = jaydebeapi.connect("com.pervasive.jdbc.v2.Driver", "jdbc:pervasive://rhwt002s:1583/RHOWERTAUX",
+                          {"user": "usuario", "password": "usuario"}, "pervasive_jdbc.jar")
+curs = conn_dois.cursor()
+curs.execute("SELECT Num_Bon, Tps_Passe_Reglage, Tps_passe_Usin,Qte_Terminee, Date_Inicio, cd_projeto,cd_of,cd_id_of, cd_fase, pecas_hora_previsto, cd_produto,ds_produto FROM STP2")
+df_dois = pd.DataFrame(curs.fetchall(),
+                  columns=['numero_ficha', 'tempo_setup','tempo_producao','quantidade_terminada', 'data_inicio','numero_projeto','codigo_of','codigo_id','fase','pecas_hora_sistema','codigo_peca','descricao_peca'])
+
+conn_dois.close()
+
+
+# DEFINIR O QUE É SETUP E O QUE É PRODUCAO
+df_dois['tempo_previsto'] = df_dois['quantidade_terminada'].div(df_dois['pecas_hora_sistema'])
+# remove os apontamentos de setup dos dados
+# df_producao = df_dois.loc[df_dois["tempo_setup"] != 0]
+#DESEMPENHO ENTRE O TEMPO PADRÃO E O REGISTRADO
+df_dois['desempenho'] = df_dois['tempo_previsto'].div(df_dois['tempo_producao'])
+# APRESENTA QUANTIDADE REALIZADA
+df_dois['pecas_por_hora_real'] = df_dois['desempenho']* (df_dois['pecas_hora_sistema'])
+#ajusta os resultados inf para 0
+df_dois.replace([np.inf, -np.inf], 0, inplace=True)
+#classifica uma coluna avaliando as metas de desempenho por peças realizadas:
+meta_minima = 0.9
+meta_maxima = 1.1
+# função que cria o sistema de avaliação:
+
+def condicao(x):
+    if x<meta_minima:
+        return 'Abaixo do esperado'
+    elif x>=meta_minima and x<=meta_maxima:
+        return 'Dentro do esperado'
+    else:
+        return 'Fora do tempo'
+
+#aplica o resultado gerando uma nova coluna com base na condição
+df_dois['Resultados'] = df_dois['desempenho'].apply(condicao)
+
+
+
