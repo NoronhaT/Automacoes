@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 from datetime import datetime
 
-conn = jaydebeapi.connect("com.pervasive.jdbc.v2.Driver", "jdbc:pervasive://rhwt002s:1583/RHOWERTGPS",
+conn = jaydebeapi.connect("com.pervasive.jdbc.v2.Driver", "jdbc:pervasive://###s:1583/######",
                           {"user": "usuario", "password": "usuario"}, "pervasive_jdbc.jar")
 curs = conn.cursor()
 curs.execute(
@@ -71,7 +71,7 @@ df_format.to_excel('producao_aberta.xlsx',index=False)
 
 # APONTAMENTOS EM ANDAMENTO
 
-conn_dois = jaydebeapi.connect("com.pervasive.jdbc.v2.Driver", "jdbc:pervasive://rhwt002s:1583/RHOWERTAUX",
+conn_dois = jaydebeapi.connect("com.pervasive.jdbc.v2.Driver", "jdbc:pervasive://####:1583/####",
                           {"user": "usuario", "password": "usuario"}, "pervasive_jdbc.jar")
 curs = conn_dois.cursor()
 curs.execute("SELECT Num_Bon, Tps_Passe_Reglage, Tps_passe_Usin,Qte_Terminee, Date_Inicio, cd_projeto,cd_of,cd_id_of, cd_fase, pecas_hora_previsto, cd_produto,ds_produto FROM STP2")
