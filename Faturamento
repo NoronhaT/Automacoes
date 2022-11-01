@@ -1,0 +1,177 @@
+import pulp
+import pandas as pd
+import gspread
+from oauth2client.service_account import ServiceAccountCredentials
+import webbrowser
+from datetime import datetime
+import os
+
+# MAXIMIZAR FATURAMENTO
+
+cwd = os.getcwd()
+solverdir = 'Cbc\\bin\\cbc.exe'
+solverdir = os.path.join(cwd, solverdir)
+solver = pulp.COIN_CMD(path=solverdir)
+
+
+pedidos = pd.read_excel(
+    'C:\\empresa.xls')
+estoque = pd.read_excel('C:\\ item.xls')
+
+pd_pedido = pd.DataFrame(pedidos)
+pd_estoque = pd.DataFrame(estoque)
+
+lista_colunas_estoque = []
+
+df_estq = pd_estoque[((pd_estoque.código_do_local__estoque_ == 7004))]
+df_estq['código_do_item'] = df_estq['código_do_item'].astype(str)
+
+df_estq.drop(
+    columns=['código_do_local__estoque_', 'descrição_do_local__estoque_', 'tipo_a', 'moeda', 'descrição_do_item',
+             'total', 'custo', 'tipo_b', 'unidade', 'agrupamento', 'descrição'], inplace=True)
+
+saldo_df = df_estq.groupby('código_do_item').sum()
+
+lista_pedidos = []
+pd_pedido['código_do_item'] = pd_pedido['código_do_item'].astype(str)
+
+pd_pedido.drop(
+    columns=['ordem', 'ok', 'situação', 'status', 'emissão_a', 'entrega', 'arquivo_de_origem', 'cod_origem', 'razão',
+             'nome', 'código_do_vendedor', 'nome_fantasia_a', 'vendedor', 'código_do_cliente', 'nome_fantasia_b',
+             'nome_do_cliente', 'código_do_fornecedor', 'nome_fantasia_c', 'nome_do_fornecedor', 'descrição_do_item',
+             'q_padrão', 'unidade', 'v_unitário', 'v_total', 'moeda', 'número_da_nota', 'emissão_b', 'q_utilizada_a',
+             'unitário_linha_c', 'desconto_linha_c', 'total_linha_c', 'q_utilizada_b', 'código_do_tipo_de_documento',
+             'tipo_de_documento', 'sigla_do_estado', 'devolução', 'condição', 'código_da_condição', 'código_segmento',
+             'descrição_segmento'], inplace=True)
+
+num_pedido = pd_pedido.drop(columns=['código_do_item', 'quantidade'])
+lista_df = num_pedido.drop_duplicates()
+lista_df = lista_df.dropna()
+
+matrix_pedido = pd_pedido.drop_duplicates()
+tabela_quant = matrix_pedido.pivot_table(index='número_do_pedido', columns='código_do_item', values='quantidade')
+tabela_quant.fillna(0, inplace=True)
+
+quantidade = df_estq['quantidade'].values.tolist()
+names = lista_df['número_do_pedido'].values.tolist()
+
+valor_pedido = pd.read_excel(
+    'C:\\empresa.xls')
+valor_pedido.drop(columns=['ordem', 'código_do_item', 'quantidade', 'ok', 'situação', 'status', 'emissão_a', 'entrega',
+                           'arquivo_de_origem', 'cod_origem', 'razão', 'nome', 'código_do_vendedor', 'nome_fantasia_a',
+                           'vendedor', 'código_do_cliente', 'nome_fantasia_b', 'nome_do_cliente',
+                           'código_do_fornecedor', 'nome_fantasia_c', 'nome_do_fornecedor', 'descrição_do_item',
+                           'q_padrão', 'unidade', 'v_unitário', 'moeda', 'número_da_nota', 'emissão_b', 'q_utilizada_a',
+                           'unitário_linha_c', 'desconto_linha_c', 'total_linha_c', 'q_utilizada_b',
+                           'código_do_tipo_de_documento', 'tipo_de_documento', 'sigla_do_estado', 'devolução',
+                           'condição', 'código_da_condição', 'código_segmento', 'descrição_segmento'], inplace=True)
+
+valor_pedido = valor_pedido.groupby('número_do_pedido').sum()
+
+nova_tabela = tabela_quant.merge(valor_pedido, how='inner', on='número_do_pedido')
+
+tabela_est = matrix_pedido.pivot_table(index='código_do_item', columns='número_do_pedido', values='quantidade')
+
+quant_estq = tabela_est.merge(df_estq, how='inner', on='código_do_item')
+
+nova_tabela.fillna(0, inplace=True)
+tabela_est.fillna(0, inplace=True)
+quant_estq.fillna(0, inplace=True)
+
+colunas = []
+
+for i in quant_estq.columns:
+    if i != 'quantidade' and i != 'código_do_item':
+        colunas.append(i)
+
+estq = quant_estq.drop(
+    columns=colunas)
+
+totais_quant = tabela_est.merge(estq, how='inner', on='código_do_item')
+totais_quant.to_excel('totais.xlsx')
+quantidade = totais_quant['quantidade'].tolist()
+print('quantidade: ', quantidade)
+
+transp_quant = totais_quant.T
+
+transp_quant.columns = transp_quant.iloc[0]
+data = transp_quant.iloc[1:]
+data.index.name = 'número_do_pedido'
+
+final = data.merge(valor_pedido, how='inner', on='número_do_pedido')
+valor = final['v_total'].tolist()
+print('valor: ', valor)
+
+ped = []
+for i in final.index:
+    ped.append(i)
+print('número dos pedidos :', ped)
+
+names = ped
+for itens in final.columns:
+    names.append(itens)
+
+final = final.reset_index(drop=True)
+print(final)
+
+
+
+solver.tmpDir = 'C:\\pdf-doc-xls-etc\\'
+
+# CHAMA O SOLVER
+Lp_prob = pulp.LpProblem('Otimização_Faturamento', pulp.LpMaximize)
+
+# VARIAVEIS DO PROBLEMA
+list_of_vars = [pulp.LpVariable(name, 0, 1, cat="Integer") for name in names]
+
+# FUNÇÃO OBJETIVO
+Lp_prob += pulp.lpSum([final.v_total[i] * list_of_vars[i] for i in range(len(final))])
+
+# RETRIÇÕES:
+for i in range(len(quantidade)):
+    Lp_prob += pulp.lpSum([final.iloc[j, i] * list_of_vars[j]
+                           for j in range(len(final))]) <= quantidade[i]
+
+# APRESENTA PROBLEMA
+print(Lp_prob)
+
+status = Lp_prob.solve(solver)  # Solver
+print(pulp.LpStatus[status])
+
+result = []
+
+#  MOSTRA VARIAVEIS:
+for v in Lp_prob.variables():
+    print(v.name, "=", v.varValue)
+    resultados = (v.name, v.varValue)
+    result.append(resultados)
+
+res = pd.DataFrame(result, columns=['Pedido', 'Total'])
+res.to_excel('resultados.xlsx', index=False)
+
+scope = ['https://spreadsheets.google.com/feeds',
+         'https://www.googleapis.com/auth/drive']
+
+credentials = ServiceAccountCredentials.from_json_keyfile_name('cred.json', scope)
+gc = gspread.authorize(credentials)
+planilha = gc.open_by_url("https://docs.google.com/spreadsheets/d/************************************")
+
+# PLANILHA DO DRIVE
+aba_um = planilha.worksheet('sugestão')
+range = aba_um.range('A:B')
+aba_um.batch_clear(['A:B'])
+aba_um.update([res.columns.values.tolist()] + res.values.tolist(), value_input_option='USER_ENTERED')
+
+hora = str(datetime.now())
+
+lista = {'ultima_atualizacao': [hora]}
+df_hora = pd.DataFrame(lista)
+
+# PLANILHA DO DRIVE
+aba_um = planilha.worksheet('data')
+range = aba_um.range('A:A')
+aba_um.batch_clear(['A:A'])
+aba_um.update([df_hora.columns.values.tolist()] + df_hora.values.tolist(), value_input_option='USER_ENTERED')
+
+url = 'https://datastudio.google.com/u/0/reporting/****************************************************'
+webbrowser.open(url)
