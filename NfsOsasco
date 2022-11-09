@@ -1,0 +1,84 @@
+import time
+from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
+from webdriver_manager.chrome import ChromeDriverManager
+from selenium.webdriver.common.action_chains import ActionChains
+from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.common.by import By
+from login import *
+
+#atualiza driver
+driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()))
+
+#login
+driver.get('https://nfe.osasco.sp.gov.br/EissnfeWebApp/Sistema/Geral/Login.aspx')
+driver.maximize_window()
+time.sleep(3)
+driver.find_element(By.XPATH,'/html/body/div[5]/div[3]/div/button/span').click()
+time.sleep(10)
+driver.find_element(By.XPATH,'//*[@id="UsuarioTextBox"]').send_keys(usuario)
+time.sleep(3)
+driver.find_element(By.XPATH,'//*[@id="SenhaTextBox"]').send_keys(senha)
+time.sleep(3)
+driver.find_element(By.XPATH,'//*[@id="EnviarButtonInicial"]').click()
+time.sleep(3)
+
+#navega até nfe
+driver.find_element(By.XPATH,'//*[@id="MainContentPlaceHolder_MainContentPlaceHolder_DadosRepeater_SubDadosRepeater_1_linkButton_0"]').click()
+time.sleep(3)
+
+#inicia a inserção de dados
+driver.find_element(By.XPATH,'//*[@id="DocumentoTextBox"]').send_keys(tomador)
+time.sleep(3)
+driver.find_element(By.XPATH,'//*[@id="PesquisarTomadorButton"]').click()
+time.sleep(3)
+
+# seleciona tipo de serviço para 14.05, valores e impostos
+driver.find_element(By.XPATH,'//*[@id="MainContentPlaceHolder_MainContentPlaceHolder_EmissaoNFEWebUserControl1_AtividadeDropDownList"]').click()
+time.sleep(3)
+actions = ActionChains(driver)
+count = 0
+
+while count < 3:
+    actions.send_keys(Keys.ARROW_DOWN).perform()
+    time.sleep(1)
+    count = count + 1
+time.sleep(3)
+actions.send_keys(Keys.ENTER)
+time.sleep(3)
+
+
+#----------------------------------------#
+
+driver.find_element(By.XPATH,'//*[@id="MainContentPlaceHolder_MainContentPlaceHolder_EmissaoNFEWebUserControl1_AtividadeDropDownList"]').send_keys(Keys.ENTER)
+time.sleep(3)
+driver.find_element(By.XPATH,'/html/body/form/div[3]/div[1]/div[2]/fieldset[2]/div[6]/div[1]/table/tbody/tr[1]/td[1]/span/input').send_keys(valor_nota)
+time.sleep(3)
+driver.find_element(By.XPATH,'/html/body/form/div[3]/div[1]/div[2]/fieldset[2]/div[6]/div[1]/table/tbody/tr[2]/td[2]/span/input').clear()
+time.sleep(3)
+driver.find_element(By.XPATH,'/html/body/form/div[3]/div[1]/div[2]/fieldset[2]/div[6]/div[1]/table/tbody/tr[2]/td[2]/span/input').send_keys(aliquota)
+time.sleep(3)
+driver.find_element(By.XPATH,'/html/body/form/div[3]/div[1]/div[2]/fieldset[2]/div[7]/textarea').send_keys(texto_nf)
+
+
+driver.find_element(By.XPATH,'//*[@id="PreVisualizarButton"]').click()
+
+emitir = input('Verifique a nota aberta no navegador antes de emitir e digite 1 para emitir ou 2 para cancelar: ')
+
+if int(emitir) == 1:
+    #driver.find_element(By.XPATH,'//*[@id="form2"]/div[4]/div[3]/div/button/span').click()
+    print('POR FAVOR AGUARDE')
+    time.sleep(1)
+    print("NOTA ENVIADA COM SUCESSO!!!")
+
+elif int(emitir)== 2:
+    driver.find_element(By.XPATH, '//*[@id="form2"]/div[4]/div[3]/div/button/span').click()
+    time.sleep(1)
+    print("CORRIJA AS INFORMAÇÕES ENVIADAS E PEÇA UMA NOVA EMISSÃO.")
+    time.sleep(30)
+
+else:
+    print('Este comando não foi reconhecido.' + 'Você deve reiniciar.')
+    time.sleep(30)
+
+
