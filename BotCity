@@ -1,0 +1,100 @@
+from botcity.web import WebBot, Browser
+from botcity.core import DesktopBot
+# Uncomment the line below for integrations with BotMaestro
+# Using the Maestro SDK
+# from botcity.maestro import *
+
+
+class Bot(DesktopBot):
+    def action(self, execution=None):
+        self.execute(r'C:\Program Files\Microsoft Office\root\Office16\EXCEL.EXE')
+        
+        if not self.find( "pasta_em_branco", matching=0.97, waiting_time=10000):
+            self.not_found("pasta_em_branco")
+        self.click()
+        
+        if not self.find( "arquivo", matching=0.97, waiting_time=10000):
+            self.not_found("arquivo")
+        self.click()
+        
+        if not self.find( "salvar", matching=0.97, waiting_time=10000):
+            self.not_found("salvar")
+        self.click()
+        
+        if not self.find( "este_pc", matching=0.97, waiting_time=10000):
+            self.not_found("este_pc")
+        self.click()
+        
+        if not self.find( "insira_nome", matching=0.97, waiting_time=10000):
+            self.not_found("insira_nome")
+        self.click()
+
+        self.paste('primeira automação com BotCity')
+
+        self.enter()
+
+        if not self.find( "ok", matching=0.97, waiting_time=10000):
+            self.not_found("ok")
+            print('Documento salvo pela primeira vez.')
+
+        else:
+            print('Documento já registrado, sobre escrevendo o arquivo.')
+            self.type_left()
+            self.enter()
+        
+        
+        
+
+        # Uncomment to silence Maestro errors when disconnected
+        # if self.maestro:
+        #     self.maestro.RAISE_NOT_CONNECTED = False
+
+        # Configure whether or not to run on headless mode
+        #self.headless = False
+
+        # Instantiate a DesktopBot
+        desktop_bot = DesktopBot()
+        # Execute operations with the DesktopBot as desired
+        # desktop_bot.control_a()
+        # desktop_bot.control_c()
+        # desktop_bot.get_clipboard()
+
+        # Uncomment to change the default Browser to Firefox
+        # self.browser = Browser.FIREFOX
+
+        # Uncomment to set the WebDriver path
+        #self.driver_path = r"C:\bin\chromedriver.exe"
+
+        # Fetch the Activity ID from the task:
+        # task = self.maestro.get_task(execution.task_id)
+        # activity_id = task.activity_id
+
+        # Opens the BotCity website.
+        #self.browse("https://www.botcity.dev")
+
+        # Uncomment to mark this task as finished on BotMaestro
+        # self.maestro.finish_task(
+        #     task_id=execution.task_id,
+        #     status=AutomationTaskFinishStatus.SUCCESS,
+        #     message="Task Finished OK."
+        # )
+
+        # Wait for 10 seconds before closing
+        #self.wait(10000)
+
+        # Stop the browser and clean up
+        #self.stop_browser()
+
+    def not_found(self, label):
+        print(f"Element not found: {label}")
+
+
+if __name__ == '__main__':
+    Bot.main()
+
+
+
+
+
+
+
