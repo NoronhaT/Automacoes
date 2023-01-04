@@ -31,14 +31,14 @@ class Bot(DesktopBot):
     def action(self, execution=None):
         # Instantiate a DesktopBot
         desktop_bot = DesktopBot()
-        print('ROTINA DE EXTRAÇÃO DE DADOS AUTOMÁTICOS NO ERP')
+        print('ROTINA DE EXTRAÇÃO DE DADOS AUTOMÁTICOS NO MAXGPS')
         print('------------------------------------------')
 
         desktop_bot.execute(
-            r'\\MYERP\ERP.exe')
-        
+            r'\\rhwt002s\MaxSistema\MaxGPS\MaxGPS.exe')
+
         self.wait(20000)
-        print('Aguardando a resposta do sistema ERP')
+        print('Aguardando a resposta do sistema MAX GPS')
         print('------------------------------------------')
 
         if not self.find( "botao_inical", matching=0.97, waiting_time=10000):
@@ -47,10 +47,10 @@ class Bot(DesktopBot):
         self.wait(10000)
         self.click_relative(826,366)
         self.wait(5000)
-        self.paste('USERNAME')
+        self.paste('THIAGO')
         self.wait(10000)
         self.tab()
-        self.paste('PASSWORD')
+        self.paste('253847')
         self.enter()
         self.wait(10000)
 
@@ -63,7 +63,7 @@ class Bot(DesktopBot):
         if not self.find( "periodo", matching=0.97, waiting_time=10000):
             self.not_found("periodo")
         self.click()
-        
+
         for contagem in range(mes_atual, 0, -1):
            py.click(47, 186)
 
@@ -71,23 +71,23 @@ class Bot(DesktopBot):
 
         for i in range(ano_atual, 0, -1):
             py.click(138, 185)
-         
+
         if not self.find( "faturamento", matching=0.97, waiting_time=10000):
             self.not_found("faturamento")
         self.click()
-        
+
         self.wait(5000)
-        
+
         if not self.find( "emissao_nf", matching=0.97, waiting_time=10000):
             self.not_found("emissao_nf")
         self.click()
-        
+
         self.wait(60000)
-        
+
         print('Extraindo o relatório de notas emitidas')
         print('---------------------------------------')
-        
-        
+
+
         if not self.find( "extrair", matching=0.97, waiting_time=10000):
             self.not_found("extrair")
         self.click()
@@ -97,7 +97,7 @@ class Bot(DesktopBot):
         self.wait(20000)
         print('Salvando o relatório...')
         print('-----------------------')
-        
+
         if not self.find( "salvar_como", matching=0.97, waiting_time=10000):
             self.not_found("salvar_como")
         self.click()
@@ -117,31 +117,31 @@ class Bot(DesktopBot):
             self.type_left()
             self.enter()
             self.wait(5000)
-            
+
         print('Buscando os dados de produção para o mesmo período...')
         print('-----------------------')
-        
+
         if not self.find( "producao", matching=0.97, waiting_time=10000):
             self.not_found("producao")
         self.click()
-        
+
         self.wait(5000)
-        
+
         if not self.find( "pcp", matching=0.97, waiting_time=10000):
             self.not_found("pcp")
         self.click()
-        
+
         self.wait(5000)
-        
+
         print('Gerando os dados de produção...')
         print('-----------------------')
-        
+
         if not self.find( "estatisticas", matching=0.97, waiting_time=10000):
             self.not_found("estatisticas")
         self.click()
-        
+
         self.wait(5000)
-        
+
         if not self.find( "gerador", matching=0.97, waiting_time=10000):
             self.not_found("gerador")
         self.click()
@@ -155,7 +155,7 @@ class Bot(DesktopBot):
 
         print('Transformando em excel...')
         print('-----------------------')
-        
+
         if not self.find( "extrator_dois", matching=0.97, waiting_time=10000):
             self.not_found("extrator_dois")
         self.click()
@@ -163,10 +163,10 @@ class Bot(DesktopBot):
         self.enter()
 
         self.wait(420000)
-        
+
         print('Salvando o arquivo...')
         print('-----------------------')
-        
+
         if not self.find( "salvar_pcp", matching=0.97, waiting_time=10000):
             self.not_found("salvar_pcp")
         self.click()
@@ -193,154 +193,8 @@ class Bot(DesktopBot):
         if not self.find( "encerrar", matching=0.97, waiting_time=10000):
             self.not_found("encerrar")
         self.click()
+        print('Tarefa no ERP finalizada com SUCESSO!' + '\n' + 'Iniciando FORECAST e alimentação do BI')
 
-
-
-        
-        print('INICIANDO A ALIMENTAÇÃO DOS INDICADORES COM OS DADOS COLETADOS')
-
-        service_json = "service_account.json"
-
-        # LOCALIZAÇÃO DA PLANILHA
-        gs = gspread.service_account(service_json)
-        sh = gs.open_by_url("https://docs.google.com/spreadsheets/d/YOURSHEET")
-        # PLANILHA DO DRIVE
-        worksheet = sh.worksheet("estatisticas de produção1")
-        val = worksheet.range('A:X')
-
-        # ARQUIVO ESTATISTICAS MAX GPS AS PCP.XLSX
-        nome_arquivo = pd.read_excel(r'L:\Relatórios\pcp.xlsx',
-                                     engine='openpyxl')
-        data_frame = pd.DataFrame(nome_arquivo)
-        data_frame.columns = (data_frame.iloc[0])
-        data_frame.drop(index=data_frame.index[-1], axis=0, inplace=True)
-        data_frame.drop(index=data_frame.index[0], axis=0, inplace=True)
-        data_frame = data_frame.fillna('')
-
-        data_frame["Início"] = data_frame["Início"].astype(str)
-        data_frame["Término"] = data_frame["Término"].astype(str)
-
-        data_final = data_frame["Término"].values
-        lista = []
-
-        for i in data_final:
-            valor = i.split('.', 1)[0]
-            print(valor)
-            lista.append(valor)
-
-        lista_df = pd.DataFrame(lista, columns=['Término'])
-        lista_df.drop(index=lista_df.index[-1], axis=0, inplace=True)
-        worksheet.batch_clear(['A:X'])
-        time.sleep(3)
-
-        print("Alimentando o DRIVE")
-        new_ds = worksheet.update([data_frame.columns.values.tolist()] + data_frame.values.tolist())
-        time.sleep(5)
-        worksheet = sh.worksheet("estatisticas de produção1")
-        worksheet.batch_clear(['E:E'])
-        time.sleep(1)
-        val_dois = worksheet.range('E:E')
-        worksheet.update('E:E', [lista_df.columns.values.tolist()] + lista_df.values.tolist())
-
-        print('Iniciando indicador de faturamento')
-
-        faturamento = pd.read_excel(r'L:\Relatórios\faturamento.xlsx')
-        fat_df = pd.DataFrame(faturamento)
-        colunas = ['Sel', 'Finalidade', 'NF', 'CFOP', 'Tipo', 'Código', 'Cliente / Fornecedor', 'Emissão', 'Sefaz',
-                   'Valor NF',
-                   'Situação NFe', 'Fatura', 'Chave', 'Protocolo']
-
-        df_extract = fat_df
-        fat_df = fat_df[fat_df['Fatura'] > 0]
-
-        fat_df = fat_df.astype(str)
-        fat_df = fat_df[fat_df['Situação NFe'] == 'Sucesso']
-
-        now = datetime.now()
-        current_time = now.strftime("%H:%M:%S")
-        print("HORA DE INÍCIO =", current_time)
-        print('Iniciando a alimentação dos arquivos de PCP no Google Drive')
-
-        service_json = "service_account.json"
-
-        # LOCALIZAÇÃO DA PLANILHA
-        gs = gspread.service_account(service_json)
-        sh = gs.open_by_url("https://docs.google.com/spreadsheets/d/YOURSHEET2")
-
-        # PLANILHA DO DRIVE
-        worksheet = sh.worksheet("faturamento")
-        val = worksheet.range('A:Z')
-        worksheet.batch_clear(['A:Z'])
-
-        print("Alimentando o DRIVE")
-        worksheet.update([fat_df.columns.values.tolist()] + fat_df.values.tolist(), value_input_option='USER_ENTERED')
-
-        df_extract.drop(
-            columns=['Sel', 'Finalidade', 'NF', 'CFOP', 'Tipo', 'Código', 'Cliente / Fornecedor', 'Sefaz', 'Valor NF',
-                     'Situação NFe', 'Chave', 'Protocolo'], inplace=True)
-        print('Preparando arquivos para forecast - PROPHET')
-
-        fat_pro = df_extract
-        fat_pro['Emissão'] = pd.to_datetime(fat_pro['Emissão'], format='%Y/%m/%d').dt.date
-        fat_pro = fat_pro.groupby(['Emissão'])['Fatura'].sum()
-        fat_pro = fat_pro.reset_index()
-        fat_pro.columns = ['ds', 'y']
-        fat_pro.to_excel('base_realizado.xlsx', index=False)
-        fat_pro['cap'] = 8.5
-
-        print('DF_PRO: ', fat_pro.head())
-
-        m = Prophet(growth='logistic')
-        m.fit(fat_pro)
-        future = m.make_future_dataframe(periods=90)
-        future['cap'] = 8.5
-        fcst = m.predict(future)
-        fig = m.plot(fcst)
-        print('------------------------------------------')
-        print('Gerando previsão para os próximos 90 dias')
-
-        lista = []
-        fcst['origem'] = 'previsão'
-
-        fcst.drop(columns=['trend', 'cap', 'yhat_lower', 'yhat_upper', 'trend_lower', 'trend_upper', 'additive_terms',
-                           'additive_terms_lower', 'additive_terms_upper', 'weekly', 'weekly_lower', 'weekly_upper',
-                           'yearly',
-                           'yearly_lower', 'yearly_upper', 'multiplicative_terms', 'multiplicative_terms_lower',
-                           'multiplicative_terms_upper'], inplace=True)
-
-        fcst.columns = ['ds', 'y', 'origem']
-
-        real = pd.read_excel('base_realizado.xlsx')
-        real_df = pd.DataFrame(real)
-        real_df['origem'] = 'realizado'
-        print(real_df.head())
-        previsao = pd.concat([real_df, fcst])
-
-        previsao = previsao[previsao['y'] > 0]
-        previsao = previsao.astype(str)
-        previsao.to_excel('resultados.xlsx', index=False)
-
-        # LOCALIZAÇÃO DA PLANILHA
-        gs = gspread.service_account(service_json)
-        sh = gs.open_by_url("https://docs.google.com/spreadsheets/d/YOURSHEET3")
-
-        # PLANILHA DO DRIVE
-        worksheet = sh.worksheet("prophet")
-        worksheet.range('A:Z')
-        worksheet.batch_clear(['A:Z'])
-        print("Alimentando o DRIVE")
-        worksheet.update([previsao.columns.values.tolist()] + previsao.values.tolist(),
-                         value_input_option='USER_ENTERED')
-
-        print('Abrindo relatório...')
-        webbrowser.get('https://datastudio.google.com/reporting/YOURREPORT')
-        print('---------------------------------')
-        print('Processo finalizado com sucesso!')
-
-        now_dois = datetime.now()
-        current_time_final = now_dois.strftime("%H:%M:%S")
-        print("HORA DE FINALIZAÇÃO = ", current_time_final)
-        print("DURAÇÃO DA ROTINA:", str(now_dois - now))
 
     def not_found(self, label):
         print(f"Element not found: {label}")
@@ -348,6 +202,146 @@ class Bot(DesktopBot):
 
 if __name__ == '__main__':
     Bot.main()
+
+
+
+    print('Iniciando a alimentação dos arquivos de PCP no Google Drive')
+    print('------------------------------------------------------------')
+
+    service_json = "service_account.json"
+
+    # LOCALIZAÇÃO DA PLANILHA
+    gs = gspread.service_account(service_json)
+    sh = gs.open_by_url("https://docs.google.com/spreadsheets/d/1Zmit2PMn7mSknuzIgcClxDAtX3L1mBjfd2YrNFlTXjQ")
+
+    # PLANILHA DO DRIVE
+    worksheet = sh.worksheet("estatisticas de produção1")
+    val = worksheet.range('A:X')
+
+    # ARQUIVO ESTATISTICAS MAX GPS AS PCP.XLSX
+    nome_arquivo = pd.read_excel(r'L:\Relatórios\pcp.xlsx', engine='openpyxl')
+    data_frame = pd.DataFrame(nome_arquivo)
+    data_frame.columns = (data_frame.iloc[0])
+    data_frame.drop(index=data_frame.index[-1], axis=0, inplace=True)
+    data_frame.drop(index=data_frame.index[0], axis=0, inplace=True)
+    data_frame = data_frame.fillna('')
+
+    data_frame["Início"] = data_frame["Início"].astype(str)
+    data_frame["Término"] = data_frame["Término"].astype(str)
+
+    data_final = data_frame["Término"].values
+    lista = []
+
+    for i in data_final:
+        valor = i.split('.', 1)[0]
+        
+        lista.append(valor)
+
+    lista_df = pd.DataFrame(lista, columns=['Término'])
+    lista_df.drop(index=lista_df.index[-1], axis=0, inplace=True)
+    worksheet.batch_clear(['A:X'])
+    time.sleep(3)
+
+    print("Alimentando o DRIVE")
+    new_ds = worksheet.update([data_frame.columns.values.tolist()] + data_frame.values.tolist())
+    time.sleep(5)
+    worksheet = sh.worksheet("estatisticas de produção1")
+    worksheet.batch_clear(['E:E'])
+    time.sleep(1)
+    val_dois = worksheet.range('E:E')
+    worksheet.update('E:E', [lista_df.columns.values.tolist()] + lista_df.values.tolist())
+
+    print('Iniciando indicador de faturamento')
+
+    faturamento = pd.read_excel(r'L:\Relatórios\faturamento.xlsx')
+    fat_df = pd.DataFrame(faturamento)
+    colunas = ['Sel', 'Finalidade', 'NF', 'CFOP', 'Tipo', 'Código', 'Cliente / Fornecedor', 'Emissão', 'Sefaz',
+               'Valor NF',
+               'Situação NFe', 'Fatura', 'Chave', 'Protocolo']
+
+    df_extract = fat_df
+    fat_df = fat_df[fat_df['Fatura'] > 0]
+
+    fat_df = fat_df.astype(str)
+    fat_df = fat_df[fat_df['Situação NFe'] == 'Sucesso']
+
+    now = datetime.now()
+    current_time = now.strftime("%H:%M:%S")
+    print("HORA DE INÍCIO =", current_time)
+    print('Iniciando a alimentação dos arquivos de PCP no Google Drive')
+
+    service_json = "service_account.json"
+
+    # LOCALIZAÇÃO DA PLANILHA
+    gs = gspread.service_account(service_json)
+    sh = gs.open_by_url("https://docs.google.com/spreadsheets/d/1WIMiX-1Kh5GNQO8tb6KG4lGy_JjzgegsXZ8pVbnKcBQ")
+
+    # PLANILHA DO DRIVE
+    worksheet = sh.worksheet("faturamento")
+    val = worksheet.range('A:Z')
+    worksheet.batch_clear(['A:Z'])
+
+    print("Alimentando o DRIVE")
+    print('--------------------')
+    worksheet.update([fat_df.columns.values.tolist()] + fat_df.values.tolist(), value_input_option='USER_ENTERED')
+
+    df_extract.drop(
+        columns=['Sel', 'Finalidade', 'NF', 'CFOP', 'Tipo', 'Código', 'Cliente / Fornecedor', 'Sefaz', 'Valor NF',
+                 'Situação NFe', 'Chave', 'Protocolo'], inplace=True)
+    print('Preparando arquivos para forecast - PROPHET')
+    print('-------------------------------------------')
+
+    fat_pro = df_extract
+    fat_pro['Emissão'] = pd.to_datetime(fat_pro['Emissão'], format='%Y/%m/%d').dt.date
+    fat_pro = fat_pro.groupby(['Emissão'])['Fatura'].sum()
+    fat_pro = fat_pro.reset_index()
+    fat_pro.columns = ['ds', 'y']
+    fat_pro.to_excel('base_realizado.xlsx', index=False)
+    fat_pro['cap'] = 8.5
+
+
+    m = Prophet(growth='logistic')
+    m.fit(fat_pro)
+    future = m.make_future_dataframe(periods=90)
+    future['cap'] = 8.5
+    fcst = m.predict(future)
+    fig = m.plot(fcst)
+
+    lista = []
+    fcst['origem'] = 'previsão'
+
+    fcst.drop(columns=['trend', 'cap', 'yhat_lower', 'yhat_upper', 'trend_lower', 'trend_upper', 'additive_terms',
+                       'additive_terms_lower', 'additive_terms_upper', 'weekly', 'weekly_lower', 'weekly_upper', 'multiplicative_terms', 'multiplicative_terms_lower',
+                       'multiplicative_terms_upper'], inplace=True)
+
+    fcst.columns = ['ds', 'y', 'origem']
+
+    real = pd.read_excel('base_realizado.xlsx')
+    real_df = pd.DataFrame(real)
+    real_df['origem'] = 'realizado'
+    previsao = pd.concat([real_df, fcst])
+
+    previsao = previsao[previsao['y'] > 0]
+    previsao = previsao.astype(str)
+    previsao.to_excel('resultados.xlsx', index=False)
+
+    # LOCALIZAÇÃO DA PLANILHA
+    gs = gspread.service_account(service_json)
+    sh = gs.open_by_url("https://docs.google.com/spreadsheets/d/1WIMiX-1Kh5GNQO8tb6KG4lGy_JjzgegsXZ8pVbnKcBQ")
+
+    # PLANILHA DO DRIVE
+    worksheet = sh.worksheet("prophet")
+    worksheet.range('A:Z')
+    worksheet.batch_clear(['A:Z'])
+    print("Alimentando o DRIVE")
+    print('-------------------------------------------')
+    worksheet.update([previsao.columns.values.tolist()] + previsao.values.tolist(), value_input_option='USER_ENTERED')
+
+    webbrowser.open('https://datastudio.google.com/reporting/75597fee-6497-4a0b-b4ba-4e836d858dcf/page/p_2zcidclurc')
+    now_dois = datetime.now()
+    tempo_execucao = now_dois - now
+    
+    print('PROCESSO FINALIZADO COM SUCESSO!' + '\n' + 'Tempo de execução do processo integral: ', str(tempo_execucao))
 
 
 
