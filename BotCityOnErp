@@ -234,7 +234,7 @@ if __name__ == '__main__':
 
     for i in data_final:
         valor = i.split('.', 1)[0]
-        
+
         lista.append(valor)
 
     lista_df = pd.DataFrame(lista, columns=['Término'])
@@ -265,8 +265,8 @@ if __name__ == '__main__':
     fat_df = fat_df.astype(str)
     fat_df = fat_df[fat_df['Situação NFe'] == 'Sucesso']
 
-    now = datetime.now()
-    current_time = now.strftime("%H:%M:%S")
+    now_tres = datetime.now()
+    current_time = now_tres.strftime("%H:%M:%S")
     print("HORA DE INÍCIO =", current_time)
     print('Iniciando a alimentação dos arquivos de PCP no Google Drive')
 
@@ -340,7 +340,7 @@ if __name__ == '__main__':
     webbrowser.open('https://datastudio.google.com/reporting/75597fee-6497-4a0b-b4ba-4e836d858dcf/page/p_2zcidclurc')
     now_dois = datetime.now()
     tempo_execucao = now_dois - now
-    
+
     print('PROCESSO FINALIZADO COM SUCESSO!' + '\n' + 'Tempo de execução do processo integral: ', str(tempo_execucao))
 
 
