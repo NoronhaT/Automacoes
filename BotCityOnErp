@@ -35,10 +35,14 @@ class Bot(DesktopBot):
         print('------------------------------------------')
 
         print('Fechando possível janelas anteriores')
+        py.hotkey('windows','down')
+        py.hotkey('windows', 'down')
+        self.wait(3000)
         py.hotkey('alt','f4')
+        
 
         desktop_bot.execute(
-            r'\\***\MaxGPS.exe')
+            r'\\*****MaxGPS\MaxGPS.exe')
 
         self.wait(20000)
         print('Aguardando a resposta do sistema MAX GPS')
@@ -53,7 +57,7 @@ class Bot(DesktopBot):
         self.paste('THIAGO')
         self.wait(10000)
         self.tab()
-        self.paste('******')
+        self.paste('*****')
         self.enter()
         self.wait(10000)
 
@@ -210,7 +214,7 @@ if __name__ == '__main__':
 
     # LOCALIZAÇÃO DA PLANILHA
     gs = gspread.service_account(service_json)
-    sh = gs.open_by_url("https://docs.google.com/spreadsheets/d/**************")
+    sh = gs.open_by_url("https://docs.google.com/spreadsheets/d/****")
     # PLANILHA DO DRIVE
     worksheet = sh.worksheet("estatisticas de produção1")
     val = worksheet.range('A:X')
@@ -276,7 +280,7 @@ if __name__ == '__main__':
 
     # LOCALIZAÇÃO DA PLANILHA
     gs = gspread.service_account(service_json)
-    sh = gs.open_by_url("https://docs.google.com/spreadsheets/d/******")
+    sh = gs.open_by_url("https://docs.google.com/spreadsheets/d/****")
 
     # PLANILHA DO DRIVE
     worksheet = sh.worksheet("faturamento")
@@ -331,7 +335,7 @@ if __name__ == '__main__':
 
     # LOCALIZAÇÃO DA PLANILHA
     gs = gspread.service_account(service_json)
-    sh = gs.open_by_url("https://docs.google.com/spreadsheets/d/******")
+    sh = gs.open_by_url("https://docs.google.com/spreadsheets/d/*****")
 
     # PLANILHA DO DRIVE
     worksheet = sh.worksheet("prophet")
@@ -340,7 +344,7 @@ if __name__ == '__main__':
     print("Alimentando o DRIVE")
     worksheet.update([previsao.columns.values.tolist()] + previsao.values.tolist(), value_input_option='USER_ENTERED')
 
-    webbrowser.open('https://datastudio.google.com/reporting/******')
+    webbrowser.open('https://datastudio.google.com/reporting/*****')
     now_dois = datetime.now()
     tempo_execucao = now_dois - now
 
