@@ -36,7 +36,6 @@ class Bot(DesktopBot):
 
         print('Fechando possível janelas anteriores')
         py.hotkey('windows','down')
-        py.hotkey('windows', 'down')
         self.wait(3000)
         py.hotkey('alt','f4')
         
