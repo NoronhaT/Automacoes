@@ -34,14 +34,17 @@ class Bot(DesktopBot):
         print('ROTINA DE EXTRAÇÃO DE DADOS AUTOMÁTICOS NO MAXGPS')
         print('------------------------------------------')
 
-        print('Fechando possível janelas anteriores')
-        py.hotkey('windows','down')
-        self.wait(3000)
-        py.hotkey('alt','f4')
+        # ATIVE QUANDO UTILIZAR UM EXE
+        #print('Fechando possível janelas anteriores')
+        #py.hotkey('windows','down')
+
+        #self.wait(3000)
+
+        #py.hotkey('alt','f4')
         
 
         desktop_bot.execute(
-            r'\\*****MaxGPS\MaxGPS.exe')
+            r'\\rhwt002s\MaxSistema\MaxGPS\MaxGPS.exe')
 
         self.wait(20000)
         print('Aguardando a resposta do sistema MAX GPS')
@@ -56,7 +59,7 @@ class Bot(DesktopBot):
         self.paste('THIAGO')
         self.wait(10000)
         self.tab()
-        self.paste('*****')
+        self.paste('253847')
         self.enter()
         self.wait(10000)
 
@@ -213,7 +216,7 @@ if __name__ == '__main__':
 
     # LOCALIZAÇÃO DA PLANILHA
     gs = gspread.service_account(service_json)
-    sh = gs.open_by_url("https://docs.google.com/spreadsheets/d/****")
+    sh = gs.open_by_url("https://docs.google.com/spreadsheets/d/1Zmit2PMn7mSknuzIgcClxDAtX3L1mBjfd2YrNFlTXjQ")
     # PLANILHA DO DRIVE
     worksheet = sh.worksheet("estatisticas de produção1")
     val = worksheet.range('A:X')
@@ -279,7 +282,7 @@ if __name__ == '__main__':
 
     # LOCALIZAÇÃO DA PLANILHA
     gs = gspread.service_account(service_json)
-    sh = gs.open_by_url("https://docs.google.com/spreadsheets/d/****")
+    sh = gs.open_by_url("https://docs.google.com/spreadsheets/d/1WIMiX-1Kh5GNQO8tb6KG4lGy_JjzgegsXZ8pVbnKcBQ")
 
     # PLANILHA DO DRIVE
     worksheet = sh.worksheet("faturamento")
@@ -334,7 +337,7 @@ if __name__ == '__main__':
 
     # LOCALIZAÇÃO DA PLANILHA
     gs = gspread.service_account(service_json)
-    sh = gs.open_by_url("https://docs.google.com/spreadsheets/d/*****")
+    sh = gs.open_by_url("https://docs.google.com/spreadsheets/d/1WIMiX-1Kh5GNQO8tb6KG4lGy_JjzgegsXZ8pVbnKcBQ")
 
     # PLANILHA DO DRIVE
     worksheet = sh.worksheet("prophet")
@@ -343,7 +346,7 @@ if __name__ == '__main__':
     print("Alimentando o DRIVE")
     worksheet.update([previsao.columns.values.tolist()] + previsao.values.tolist(), value_input_option='USER_ENTERED')
 
-    webbrowser.open('https://datastudio.google.com/reporting/*****')
+    webbrowser.open('https://datastudio.google.com/reporting/75597fee-6497-4a0b-b4ba-4e836d858dcf/page/p_2zcidclurc')
     now_dois = datetime.now()
     tempo_execucao = now_dois - now
 
