@@ -1,0 +1,287 @@
+import sys
+import os
+import openai
+import speech_recognition as sr
+import pyttsx3
+from datetime import datetime
+
+
+
+
+def boas_vindas():
+    hour = datetime.now().hour
+    if hour >= 0 and hour < 12:
+        speak("Olá, um ótimo dia!")
+        print("Olá, um ótimo dia!")
+        speak("Meu nome é Vênus. Posso responder praticamente qualquer pergunta utilizando a ferramenta da OpenIa. Vamos lá?")
+    elif hour >= 12 and hour < 18:
+        speak("Boa tarde!")
+        print("Boa tarde!")
+        speak("Meu nome é Vênus. Posso responder praticamente qualquer pergunta utilizando a ferramenta da OpenIa. Vamos lá?")
+    else:
+        speak("Oi, boa noite")
+        print("Oi, boa noite")
+        speak("Meu nome é Vênus. Posso responder praticamente qualquer pergunta utilizando a ferramenta da OpenIa. Vamos lá?")
+
+# FIX para o Spacy error
+#from spacy.cli import download
+#download("en_core_web_sm")
+
+class ENGSM:
+    ISO_639_1 = 'en_core_web_sm'
+
+# parametro inicial de voz
+engine = pyttsx3.init('sapi5')
+voices = engine.getProperty('voices')
+engine.setProperty('voice', voices[0].id)
+
+# definição falar
+def speak(texto):
+    engine.say(texto)
+    engine.runAndWait()
+
+# função ouvir comando do usuário
+def ouvir_microfone():
+    # Habilita o microfone do usuário
+    microfone = sr.Recognizer()
+    # usando o microfone
+    with sr.Microphone() as source:
+        # Chama um algoritmo de reducao de ruidos no som
+        microfone.adjust_for_ambient_noise(source)
+        # Frase para o usuario dizer algo
+        print("Diga alguma coisa ")
+        # Armazena o que foi dito numa variavel
+        audio = microfone.listen(source)
+    try:
+        # Passa a variável para o algoritmo reconhecedor de padroes
+        frase = microfone.recognize_google(audio, language='pt-BR')
+        # Retorna a frase pronunciada
+        print("Você disse: " + frase)
+
+    # Se nao reconheceu o padrao de fala, exibe a mensagem
+    except Exception as e:
+        print("Não entendi")
+        speak("Não te entendi")
+        return ouvir_microfone()
+
+    return frase
+
+
+# função ouvir comando do usuário
+def ouvir_microfone_en():
+    # Habilita o microfone do usuário
+    microfone = sr.Recognizer()
+    # usando o microfone
+    with sr.Microphone() as source:
+        # Chama um algoritmo de reducao de ruidos no som
+        microfone.adjust_for_ambient_noise(source)
+        # Frase para o usuario dizer algo
+        print("Say something now ")
+        # Armazena o que foi dito numa variavel
+        audio = microfone.listen(source)
+    try:
+        # Passa a variável para o algoritmo reconhecedor de padroes
+        frase = microfone.recognize_google(audio, language='EN')
+        # Retorna a frase pronunciada
+        print("You said: " + frase)
+
+    # Se nao reconheceu o padrao de fala, exibe a mensagem
+    except Exception as e:
+        print("I don't understant you")
+        speak("I don't undestant you")
+        return ouvir_microfone_en()
+    return frase
+
+
+def chave_openia():
+
+    try:
+        speak('Procurando pela chave da OpenIa')
+        print('Procurando pela chave da OpenIa')
+        with open('chave.txt', 'r') as key:
+            for i in key:
+                print('chave encontrada')
+                speak('chave encontrada')
+
+
+    except Exception:
+        speak('Chave não encontrada, é necessário inserir uma chave: ')
+        print('Chave não encontrada, é necessário inserir uma chave: ')
+        chave = input('Insira chave:')
+        with open('chave.txt', 'w') as key:
+            key.write(chave)
+
+
+
+def idioma():
+    speak('Eu consigo falar em dois idiomas:' + 'Português ou Inglês')
+    speak('Qual deles você gostaria de utilizar?')
+    palavra = ouvir_microfone().lower()
+
+    if 'inglês' in palavra:
+        speak('Você selecionou inglês. Alterando idioma para inglês.')
+        engine = pyttsx3.init('sapi5')
+        voices = engine.getProperty('voices')
+        engine.setProperty('voice', voices[1].id)
+        speak("Let's start in english language")
+
+        if __name__ == '__main__':
+            while True:
+                speak("Make a question or tell me exactaly what you need : ")
+                statement = ouvir_microfone_en().lower()
+
+                if statement == 0:
+                    continue
+
+                elif 'bye' in statement:
+                    speak("I'll quit. Bye bye!")
+                    sys.exit()
+
+                elif 'python' in statement and 'code' in statement:
+                    gpt_prompt = statement
+                    response = openai.Completion.create(
+                        engine="text-davinci-003",
+                        prompt=gpt_prompt,
+                        temperature=0.5,
+                        max_tokens=256,
+                        top_p=1.0,
+                        frequency_penalty=0.0,
+                        presence_penalty=0.0
+                    )
+                    resposta = (response['choices'][0]['text'])
+                    print(resposta)
+                    with open('code.txt', 'w') as codigo:
+                        codigo.write(resposta)
+                        speak('You can consult your request on a file named code.')
+                        continue
+
+
+                else:
+                    gpt_prompt = statement
+                    response = openai.Completion.create(
+                        engine="text-davinci-003",
+                        prompt=gpt_prompt,
+                        temperature=0.5,
+                        max_tokens=256,
+                        top_p=1.0,
+                        frequency_penalty=0.0,
+                        presence_penalty=0.0
+                    )
+                    resposta = (response['choices'][0]['text'])
+                    speak(resposta)
+                    print(resposta)
+                    statement = str(statement)
+                    file_name = "pergunta- " + statement + ".txt"
+
+                    # Verifica se a pasta "respostas" existe
+                    if not os.path.exists("respostas"):
+                        # Cria a pasta "respostas"
+                        os.makedirs("respostas")
+
+                    # Caminho completo para o arquivo
+                    file_path = os.path.join("respostas", file_name)
+
+                    # Texto a ser salvo no arquivo
+                    text_to_save = resposta
+                    print(f'Salvando {resposta}')
+
+                    # Salva o texto no arquivo
+                    with open(file_path, "w") as f:
+                        f.write(text_to_save)
+
+                    print(f"Arquivo salvo em: {file_path}")
+
+
+
+    elif 'português' in palavra:
+            speak('Você selecionou português. Mantendo o idioma em português')
+            engine = pyttsx3.init('sapi5')
+            voices = engine.getProperty('voices')
+            engine.setProperty('voice', voices[0].id)
+            speak("Vamos começar?")
+
+            if __name__ == '__main__':
+                while True:
+                    speak("Faça uma pergunta  me dando os detalhes do que você gostaria: ")
+                    statement = ouvir_microfone().lower()
+
+                    if statement == 0:
+                        continue
+                    elif 'tchau' in statement:
+                        speak('Vou encerrar, até logo.')
+                        sys.exit()
+
+                    elif 'python' in statement and 'código' in statement:
+                        gpt_prompt = statement
+                        response = openai.Completion.create(
+                            engine="text-davinci-003",
+                            prompt=gpt_prompt,
+                            temperature=0.5,
+                            max_tokens=256,
+                            top_p=1.0,
+                            frequency_penalty=0.0,
+                            presence_penalty=0.0
+                        )
+                        resposta = (response['choices'][0]['text'])
+                        print(resposta)
+                        with open('codigo.txt','w') as codigo:
+                            codigo.write(resposta)
+                            speak('Sua solicitação está pronta no arquivo de nome código.')
+                            continue
+
+
+                    else:
+                        gpt_prompt = statement
+                        response = openai.Completion.create(
+                            engine="text-davinci-003",
+                            prompt=gpt_prompt,
+                            temperature=0.5,
+                            max_tokens=256,
+                            top_p=1.0,
+                            frequency_penalty=0.0,
+                            presence_penalty=0.0
+                        )
+                        resposta = (response['choices'][0]['text'])
+                        speak(resposta)
+                        print(resposta)
+                        statement = str(statement)
+                        file_name = "pergunta- " + statement + ".txt"
+
+                        # Verifica se a pasta "respostas" existe
+                        if not os.path.exists("respostas"):
+                            # Cria a pasta "respostas"
+                            os.makedirs("respostas")
+
+                        # Caminho completo para o arquivo
+                        file_path = os.path.join("respostas", file_name)
+
+                        # Texto a ser salvo no arquivo
+                        text_to_save = resposta
+                        print(f'Salvando {resposta}')
+
+                        # Salva o texto no arquivo
+                        with open(file_path, "w") as f:
+                            f.write(text_to_save)
+
+                        print(f"Arquivo salvo em: {file_path}")
+
+
+    else:
+        speak('É necessário que você selecione entre as duas opções: fale inglês ou fale português.')
+        return idioma()
+
+
+
+
+chave_openia()
+
+chave = []
+
+with open('chave.txt', 'r') as key:
+    for i in key:
+        chave.append(i)
+
+openai.api_key = chave[0]
+boas_vindas()
+idioma()
+
