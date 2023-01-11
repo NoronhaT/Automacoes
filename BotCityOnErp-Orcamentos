@@ -1,0 +1,211 @@
+from botcity.core import DesktopBot
+import pandas as pd
+from datetime import datetime
+
+
+# ATENÇÃO: DEPENDÊNCIAS QUE DEVEM ESTAR NA PASTA GERADA PELO PYINSTALLER: RESOURCES, CRED.JSON E PROPHET
+
+now = datetime.now()
+current_time = now.strftime("%H:%M:%S")
+print("HORA DE INÍCIO =", current_time)
+print('---------------------------------------')
+
+mes = int(now.strftime("%m"))  # STR DO MÊS CONVERTIDO EM INTERGER
+ano = int(now.strftime("%Y"))  # STR DO ANO CONVERTIDO EM INTERGER
+
+mes_atual = mes - 1  # DEFINE A QUANTIDADE DE CLIQUES NA ABA DE MESES (MES ATUAL - JANEIRO DO ANO ATUAL)
+ano_atual = ano + (2 - ano)  # DEFINE A QUANTIDADE DE CLIQUES NA ABA DE ANOS 202X + 1 - 202X)
+
+
+# FUNÇÃO QUE CAPTURA CLIENTE, ITENS QUE SERÃO ORÇADOS E QUANTIDADES
+def cadastro():
+    nome = input('Insira o nome do cliente: ')
+    quantidade = input('Insira a quantidade de itens do orçamento: ')
+
+    try:
+        print('Serão inseridos ao orçamento ', quantidade, ' itens.')
+        quantidade = int(quantidade)
+
+        lista = []
+
+        for _ in range(quantidade):
+            print(f'Cliente registrado:{nome}')
+            item = {
+                "nome do cliente": nome,
+                "descrição do item": input("Insira a descrição do item: "),
+                "quantidade": int(input("Insira a quantidade: ")),
+                "código do item": input("Insira o código do item: ")
+            }
+            lista.append(item)
+
+        # TRANSFORMA TUDO EM UM DATAFRAME
+        tabela_registro = pd.DataFrame(lista)
+        print(tabela_registro.head())
+        tabela_registro.to_excel('tabela_orcamento.xlsx', index=False)
+
+
+    except ValueError:
+        print('O valor precisa ser númerico.')
+        return cadastro()
+
+
+
+class Bot(DesktopBot):
+    def action(self, execution=None):
+        now = datetime.now()
+        current_time = now.strftime("%d/%m/%Y")
+        # Instantiate a DesktopBot
+        desktop_bot = DesktopBot()
+        print('ROTINA DE ORÇAMENTOS MAXGPS')
+        print('------------------------------------------')
+
+
+
+        # ATIVE QUANDO UTILIZAR UM EXE
+        # print('Fechando possível janelas anteriores')
+        # py.hotkey('windows','down')
+
+        # self.wait(3000)
+
+        # py.hotkey('alt','f4')
+
+        desktop_bot.execute(
+            r'\\****\MaxGPS\MaxGPS.exe')
+
+        self.wait(20000)
+        print('Aguardando a resposta do sistema MAX GPS')
+        print('------------------------------------------')
+
+        if not self.find( "botao_inical", matching=0.97, waiting_time=10000):
+            print("botao_inical não localizado")
+
+        self.wait(10000)
+        self.click_relative(826, 366)
+        self.wait(5000)
+        self.paste('THIAGO')
+        self.wait(10000)
+        self.tab()
+        self.paste('PASSWORD')
+        self.enter()
+        self.wait(20000)
+
+        print('Iniciando a geração de orçamento ')
+        print('------------------------------------------')
+
+        if not self.find( "vendas_mod_principal", matching=0.97, waiting_time=10000):
+            print("vendas_mod_principal não localizado.")
+        self.click()
+
+        if not self.find( "orcamento_superior", matching=0.97, waiting_time=10000):
+            print("orcamento_superior não localizado")
+        self.click()
+
+        if not self.find( "orcamento_barra", matching=0.97, waiting_time=10000):
+            print("orcamento_barra não localizado")
+        self.click()
+
+        self.wait(5000)
+        self.key_f4()
+        self.wait(20000)
+
+        # LEITURA DA TABELA GERADA PELO USUÁRIO PARA AÇÃO DO ROBO
+
+        tabela_orc = pd.read_excel('tabela_orcamento.xlsx')
+
+
+        tab_df = pd.DataFrame(tabela_orc)
+
+
+        # ARMAZENA O NOME DO CLIENTE
+        nome = tab_df['nome do cliente'][0]
+        
+        if not self.find( "cliente_nome", matching=0.97, waiting_time=10000):
+            print("cliente_nome não encontrado")
+        self.click_relative(99, 3)
+
+        self.wait(1000)
+        self.paste(nome)
+        self.wait(1000)
+        self.type_down()
+        self.enter()
+        self.wait(10000)
+
+        print(f'Registrando referência:{nome} - {current_time}')
+
+        referencia = (f'{nome} - {current_time}')
+
+        for i in range(5):
+            self.tab()
+        self.paste(referencia)
+        
+        itens = len(tab_df)
+
+        for i in range(itens):
+
+            if not self.find( "adicionar_item", matching=0.97, waiting_time=10000):
+                print("adicionar_item não encontrado")
+            self.click()
+            self.wait(1000)
+            self.space()
+
+            if not self.find( "seleciona_fabricado", matching=0.97, waiting_time=10000):
+                print("seleciona_fabricado não encontrado")
+            self.click()
+            self.type_down()
+            self.enter()
+
+            #separa os itens da linha a ser inserida no dataframe
+            codigo_item,quantidade,descricao = tab_df['código do item'][i],int(tab_df['quantidade'][i]),tab_df['descrição do item'][i]
+            self.tab()
+            self.paste(codigo_item)
+            self.tab()
+            self.paste(codigo_item)
+            
+            if not self.find( "descricao_1", matching=0.97, waiting_time=10000):
+                print("descricao_1 não encontrado")
+            self.click_relative(279, 1)
+            self.paste(descricao)
+            
+            if not self.find( "descricao_2", matching=0.97, waiting_time=10000):
+                print("descricao_2 não encontrado")
+            self.click_relative(274, 2)
+            self.paste(descricao)
+            self.tab()
+            self.paste(codigo_item)
+            
+            if not self.find( "desenho", matching=0.97, waiting_time=10000):
+                print("desenho não encontrado")
+            self.click_relative(117, 0)
+            self.paste(codigo_item)
+            self.tab()
+            self.paste(descricao)
+
+            for j in range(10):
+                self.tab()
+            self.control_a()
+            self.paste(quantidade)
+            for k in range(13):
+                self.tab()
+            self.space()
+
+        self.key_f6()
+        print('ORÇAMENTO CRIADO COM SUCESSO!')
+
+            
+            
+
+        
+
+
+
+
+
+if __name__ == '__main__':
+    cadastro()
+    Bot.main()
+
+
+
+
+
+
