@@ -3,18 +3,6 @@ import pandas as pd
 from datetime import datetime
 
 
-# ATENÇÃO: DEPENDÊNCIAS QUE DEVEM ESTAR NA PASTA GERADA PELO PYINSTALLER: RESOURCES, CRED.JSON E PROPHET
-
-now = datetime.now()
-current_time = now.strftime("%H:%M:%S")
-print("HORA DE INÍCIO =", current_time)
-print('---------------------------------------')
-
-mes = int(now.strftime("%m"))  # STR DO MÊS CONVERTIDO EM INTERGER
-ano = int(now.strftime("%Y"))  # STR DO ANO CONVERTIDO EM INTERGER
-
-mes_atual = mes - 1  # DEFINE A QUANTIDADE DE CLIQUES NA ABA DE MESES (MES ATUAL - JANEIRO DO ANO ATUAL)
-ano_atual = ano + (2 - ano)  # DEFINE A QUANTIDADE DE CLIQUES NA ABA DE ANOS 202X + 1 - 202X)
 
 
 # FUNÇÃO QUE CAPTURA CLIENTE, ITENS QUE SERÃO ORÇADOS E QUANTIDADES
