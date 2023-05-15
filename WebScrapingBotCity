@@ -1,0 +1,193 @@
+import os
+import sys
+from tkinter import Tk, Label, PhotoImage
+from webdriver_manager.firefox import GeckoDriverManager
+from bs4 import BeautifulSoup
+import re
+import pandas as pd
+from datetime import datetime
+
+
+# Import for the Web Bot
+from botcity.web import WebBot, Browser, By
+from tkinter import *
+
+
+
+
+
+local_drive = r'######\ProjetoLink\driver\.wdm\drivers\geckodriver'
+GeckoDriverManager(path=local_drive).install()
+
+# Percorre os diretórios dentro do diretório base
+for root, dirs, files in os.walk(local_drive):
+    for file in files:
+        # Verifica se o arquivo é o geckodriver.exe
+        if file == 'geckodriver.exe':
+            # Obtém o caminho completo do geckodriver.exe
+            geckodriver_path = os.path.join(root, file)
+            break
+
+webdriver_file = geckodriver_path
+
+
+data_atual = datetime.now()
+data_consulta = data_atual.strftime('%d/%m/%Y')
+
+
+#TKINTER JANELA
+
+# JANELA
+root = Tk()
+root.geometry('500x500')
+root.title('BOTCITY- WEBSCRAPPER - NORONHA TECH')
+root.resizable(False, False)
+
+
+var = IntVar()
+
+logo = PhotoImage(file=r"#####\ProjetoLink\bcity.png")
+logo = logo.subsample(2, 2)
+label_logo = Label(root, image=logo)
+label_logo.pack()
+
+
+
+label_1 = Label(root, text="ITEM A SER PROCURADO", width=20, font=("bold", 10))
+label_1.place(x=50, y=200)
+entry_1 = Entry(root)
+entry_1.place(x=240, y=200)
+entry_1.get()
+
+
+Radiobutton(root, text="BUSCA NO ALIEXPRESS", padx=20, variable=var, value=1).place(x=220, y=250)
+Radiobutton(root, text="BUSCA NO MERCADO LIVRE", padx=20, variable=var, value=2).place(x=220, y=290)
+Radiobutton(root, text="SAIR DO PROGRAMA", padx=20, variable=var, value=3).place(x=220, y=330)
+
+print("--------------------------------------------------------------------------")
+print("NORONHA TECHNOLOGIES - BOTCITY FRAMEWORK")
+print("--------------------------------------------------------------------------")
+print("ML E AE - WEBSCRAPPER rv.07")
+print("--------------------------------------------------------------------------")
+
+url_ali = "https://pt.aliexpress.com/"
+url_mli = "https://www.mercadolivre.com.br/"
+
+
+
+
+
+
+def checaVar():
+    if var.get() == 1 and len(entry_1.get()) != 0:
+        bot = WebBot()
+
+        # Configure whether or not to run on headless mode
+        bot.headless = False
+
+        # Uncomment to change the default Browser to Firefox
+        bot.browser = Browser.FIREFOX
+
+
+
+        # Uncomment to set the WebDriver path
+        bot.driver_path = webdriver_file
+
+        bot.browse(url_ali)
+
+
+        if bot.find( "compre", matching=0.97, waiting_time=10000):
+            bot.click()
+       
+        bot.wait(10000)
+
+        bot.find_element('//*[@id="search-key"]',By.XPATH).click()
+        bot.kb_type(str(entry_1.get()))
+        bot.find_element('//*[@id="form-searchbar"]/div[1]/input',By.XPATH).click()
+
+        print("--------------------------------------------------------------------------")
+        print("AGUARDE ENQUANTO TE MOSTRO OS RESULTADOS")
+        print("--------------------------------------------------------------------------")
+
+        bot.wait(5000)
+
+        xpath_mae = bot.find_element('/html/body/div[5]/div[1]/div/div[2]/div/div[2]/div[3]',By.XPATH)
+        html_content = xpath_mae.get_attribute('outerHTML')
+
+        b_soup = BeautifulSoup(html_content, 'html.parser')
+        lista_produtos = b_soup.find_all('a', class_='manhattan--container--1lP57Ag cards--gallery--2o6yJVt')
+
+        print("--------------------------------------------------------------------------")
+        print("RESULTADOS PARA SUA BUSCA NO ALIEXPRESS SÃO: ")
+        print("--------------------------------------------------------------------------")
+
+        data=[]
+
+        for i in lista_produtos:
+            print("--------------------------------------------------------------------------")
+            produtos = i.select('h1', class_='manhattan--titleText--WccSjUS')
+            produtos =produtos[0].get_text()
+            vendedor = i.select('a',class_='cards--storeLink--1_xx4cD')
+            vendedor =vendedor[0].get_text()
+            link = i['href']
+            print(link)
+
+            pdp_npi_match = re.search(r'pdp_npi=([^&]+)', link)
+
+            if pdp_npi_match:
+                pdp_npi_value = pdp_npi_match.group(1)
+                pdp_npi_parts = pdp_npi_value.split('%21')
+                valor_atual = pdp_npi_parts[3]
+                valor_original = pdp_npi_parts[4]
+
+                # Adiciona os dados ao dicionário
+                produto_data = {
+                    'Produto': produtos,
+                    'Vendedor': vendedor,
+                    'Link': link,
+                    'Preço Atual': valor_atual,
+                    'Data Pesquisa': data_consulta
+                }
+
+                data.append(produto_data)
+
+        dados = pd.DataFrame(data)
+        dados['Preço Atual'] = dados['Preço Atual'].astype(str).str.replace('.', ',')
+
+
+        try:
+            arquivo_historico = pd.read_excel(r'C:\Users\thiag\PycharmProjects\BotCity13052023\ProjetoLink\Consultas Aliexpress.xlsx')
+            df_hist = pd.DataFrame(arquivo_historico)
+            novo_df = pd.concat([df_hist,dados])
+            novo_df.to_excel(f'Consultas Aliexpress - {str(entry_1.get())}.xlsx', index=False)
+            print('Dados salvos com sucesso!')
+            bot.stop_browser()
+            sys.exit()
+        except Exception:
+            dados.to_excel(f'Consultas Aliexpress - {str(entry_1.get())}.xlsx',index=False)
+
+
+        print('Dados salvos com sucesso!')
+        bot.stop_browser()
+        sys.exit()
+
+
+        # Uncomment to mark this task as finished on BotMaestro
+        # maestro.finish_task(
+        #     task_id=execution.task_id,
+        #     status=AutomationTaskFinishStatus.SUCCESS,
+        #     message="Task Finished OK."
+        # )
+
+
+def not_found(label):
+    print(f"Element not found: {label}")
+
+
+if __name__ == '__main__':
+    checaVar()
+
+
+
+botao_iniciar = Button(root, text='Iniciar', width=20, bg="black", fg='white', command=checaVar).place(x=180, y=380)
+root.mainloop()
